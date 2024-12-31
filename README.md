@@ -1,1 +1,78 @@
-# ColbertGradioChatbot
+# Colbert Gradio Chatbot
+
+This repository contains a Gradio-based chatbot that uses the ColBERT model for text embedding and Qdrant for vector storage. The chatbot can process PDF documents, split them into chunks, and use them for retrieval-augmented generation (RAG) to answer user queries.
+
+## Features
+
+- **PDF Processing**: Split PDF documents into chunks for efficient processing.
+- **Text Embedding**: Use the ColBERT model for generating text embeddings.
+- **Vector Storage**: Store and retrieve embeddings using Qdrant.
+- **Gradio Interface**: Interactive chat interface built with Gradio.
+
+## Requirements
+
+- Python 3.8+
+- Install dependencies using `pip`:
+
+```sh
+pip install -r requirements.txt
+```
+
+## Usage
+- **Prepare Documents:** Ensure your PDF documents are ready for processing and place them into the 'docs' folder.
+- **Run the Chatbot**: Execute the script to start the Gradio interface.
+
+```sh
+python colbert-gradio-chatbot.py
+```
+
+## Functions
+
+### split_pdf_into_chunks
+Splits a PDF document into chunks.
+
+**Args**:
+
+- pdf_path (str): Path to the PDF document.
+- chunk_size (int): Number of characters per chunk.
+- overlap_size (int): Number of characters that chunks should overlap.
+
+**Returns**:
+
+- list: A list of chunks with page information.
+
+### split_text_into_chunks_langchain
+Splits text into chunks using LangChain.
+
+**Args**:
+
+- pdf_path (str): Path to the PDF document.
+- chunk_size (int): Number of characters per chunk.
+- overlap_size (int): Number of characters that chunks should overlap.
+
+**Returns**:
+
+- list: A list of chunks with page information.
+
+### prepare_documents
+Prepares documents for processing.
+
+### chat_with_rag
+Handles user input and generates responses using RAG.
+
+**Args**:
+
+- user_input (str): User's query.
+- history (list): Chat history.
+
+**Returns**:
+
+- str: Response to the user's query.
+
+## Open / Known Issues
+- currently the used docs are hardcoded and need to be read from the 'docs' directory, this was done for testing purposes
+- the history of the current chat is currently ignored
+- source citication generation has to be validated and test
+
+## License
+This project is licensed under the MIT License.

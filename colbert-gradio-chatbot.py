@@ -3,7 +3,6 @@ from fastembed import LateInteractionTextEmbedding
 from qdrant_client import QdrantClient, models
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import fitz
-from datetime import datetime
 import ollama
 
 qdrant_client = QdrantClient(":memory:")
