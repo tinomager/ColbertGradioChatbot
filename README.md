@@ -13,6 +13,7 @@ This repository contains a Gradio-based chatbot that uses the ColBERT model for 
 
 - Python 3.8+
 - Install dependencies using `pip`:
+- Run Ollama with Llama 3.2 3B model locally
 
 ```sh
 pip install -r requirements.txt
