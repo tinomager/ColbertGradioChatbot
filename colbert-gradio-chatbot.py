@@ -9,7 +9,8 @@ qdrant_client = QdrantClient(":memory:")
 qdrant_collection_name = "colbert_collection"
 model_name = "answerdotai/answerai-colbert-small-v1"
 embedding_model = LateInteractionTextEmbedding(model_name)
-use_sources = False
+use_sources = True
+source_tag = "Sources -->"
 
 def split_pdf_into_chunks(pdf_path, chunk_size, overlap_size):
     """
@@ -167,25 +168,26 @@ def chat_with_rag(user_input, history):
             if msg["role"] == "user":
                 history_text += f"User: {msg["content"]}"
             elif msg["role"] == "assistant":
-                history_text += f"Assistant: {msg["content"]}"
+                assistant_text = msg["content"]
+                if source_tag in assistant_text:
+                    #Remove the sources from the assistant text so the model isn't confused
+                    assistant_text = assistant_text.split(source_tag)[0]
+                history_text += f"Assistant: {assistant_text}"
             messages.append({"role" : msg["role"], "content" : msg["content"]})
-        prompt = f"You are a helpful assistant for question-answering tasks. Here is the history of a conversation of an assistant with an user: {history_text}. The next input of the user is: {user_input}. Please carefully rephrase the last user input considering the given historical chat context. The rephrased user input:"
+        prompt = f"You are an expert at rephrasing text. Your task is to rewrite a given user input based on a given conversation between an assistant and an user. Here is the history of the conversation: {history_text}. The next input of the user is: {user_input}. Please carefully rewrite the last user input considering the given historical chat context. The rewritten user input should contain all necessary information from the previous history. If you are not sure how to rewrite the user input, just return the original user input. Only return the rewritten or original user input."
         rephrase_response = ollama.generate(model="llama3.2", prompt=prompt).response
      
     res = qdrant_client.query_points(
         collection_name=qdrant_collection_name,
         query=list(embedding_model.query_embed(rephrase_response))[0], #converting generator object into numpy.ndarray
         limit=5, #How many closest to the query movies we would like to get
-        #with_vectors=True, #If this option is used, vectors will also be returned
         with_payload=True #So metadata is provided in the output
     )
 
     context = "\n".join([point.payload.get("text", "") for point in res.points])
-    #prompt = f"Basierend auf folgendem Kontext, beantworte die Frage in der Sprache, in der die Frage gestellt wurde. Der Kontext lautet: {context}\n\nDie Frage lautet: {user_input}?"
     prompt = f"You are a helpful assistant for question-answering tasks. Here is some context for the question: {context} Please carefully consider the given context. Review the user's question and then provide an answer that directly addresses the question using the provided information. If you do not find the answer in the context, say so honestly. User's question: {user_input}"
     messages.append({"role" : "user", "content" : prompt})
     response = ollama.chat(model="llama3.2", messages=messages)
-    #response = ollama.generate(model="llama3.2", prompt=prompt)
     
     answer = response.message.content
     if use_sources:
@@ -194,7 +196,7 @@ def chat_with_rag(user_input, history):
         for point in res.points:
             sources += f"{idx_number}. {point.payload.get('document', '')}, S. {point.payload.get("start_page", "")}\n\n"
             idx_number += 1
-        return answer + "\n\nSources:\n" + sources
+        return answer + f"\n\n{source_tag}\n" + sources
     else:
         return answer
 
