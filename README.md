@@ -72,7 +72,6 @@ Handles user input and generates responses using RAG.
 
 ## Open / Known Issues
 - currently the used docs are hardcoded and need to be read from the 'docs' directory, this was done for testing purposes
-- the history of the current chat is currently ignored
 - source citication generation has to be validated and test
 
 ## License
