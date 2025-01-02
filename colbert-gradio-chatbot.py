@@ -158,9 +158,23 @@ def chat_with_rag(user_input, history):
     if user_input.lower() == "exit":
         exit()
 
+    messages = []
+    
+    rephrase_response = user_input
+    if len(history) > 0:
+        history_text = ""
+        for msg in history:
+            if msg["role"] == "user":
+                history_text += f"User: {msg["content"]}"
+            elif msg["role"] == "assistant":
+                history_text += f"Assistant: {msg["content"]}"
+            messages.append({"role" : msg["role"], "content" : msg["content"]})
+        prompt = f"You are a helpful assistant for question-answering tasks. Here is the history of a conversation of an assistant with an user: {history_text}. The next input of the user is: {user_input}. Please carefully rephrase the last user input considering the given historical chat context. The rephrased user input:"
+        rephrase_response = ollama.generate(model="llama3.2", prompt=prompt).response
+     
     res = qdrant_client.query_points(
         collection_name=qdrant_collection_name,
-        query=list(embedding_model.query_embed(user_input))[0], #converting generator object into numpy.ndarray
+        query=list(embedding_model.query_embed(rephrase_response))[0], #converting generator object into numpy.ndarray
         limit=5, #How many closest to the query movies we would like to get
         #with_vectors=True, #If this option is used, vectors will also be returned
         with_payload=True #So metadata is provided in the output
@@ -169,16 +183,22 @@ def chat_with_rag(user_input, history):
     context = "\n".join([point.payload.get("text", "") for point in res.points])
     #prompt = f"Basierend auf folgendem Kontext, beantworte die Frage in der Sprache, in der die Frage gestellt wurde. Der Kontext lautet: {context}\n\nDie Frage lautet: {user_input}?"
     prompt = f"You are a helpful assistant for question-answering tasks. Here is some context for the question: {context} Please carefully consider the given context. Review the user's question and then provide an answer that directly addresses the question using the provided information. If you do not find the answer in the context, say so honestly. User's question: {user_input}"
-    response = ollama.generate(model="llama3.2", prompt=prompt)
+    messages.append({"role" : "user", "content" : prompt})
+    response = ollama.chat(model="llama3.2", messages=messages)
+    #response = ollama.generate(model="llama3.2", prompt=prompt)
     
-    idx_number = 1
-    sources = ""
-    for point in res.points:
-        sources += f"{idx_number}. {point.payload.get('document', '')}, S. {point.payload.get("start_page", "")}\n\n"
-        idx_number += 1
-    
+    answer = response.message.content
+    if use_sources:
+        idx_number = 1
+        sources = ""
+        for point in res.points:
+            sources += f"{idx_number}. {point.payload.get('document', '')}, S. {point.payload.get("start_page", "")}\n\n"
+            idx_number += 1
+        return answer + "\n\nSources:\n" + sources
+    else:
+        return answer
 
-    return response.response + "\n\nSources:\n" + sources
+    
 
 # Create the Gradio interface
 iface = gr.ChatInterface(
