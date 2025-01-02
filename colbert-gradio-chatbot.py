@@ -9,7 +9,7 @@ qdrant_client = QdrantClient(":memory:")
 qdrant_collection_name = "colbert_collection"
 model_name = "answerdotai/answerai-colbert-small-v1"
 embedding_model = LateInteractionTextEmbedding(model_name)
-use_langchain = False
+use_sources = False
 
 def split_pdf_into_chunks(pdf_path, chunk_size, overlap_size):
     """
@@ -109,7 +109,7 @@ def prepare_documents():
     all_chunks = []
 
     for file in file_names:
-        if(use_langchain):
+        if not use_sources:
             chunks = split_text_into_chunks_langchain(file, 1000, 150)
         else:  
             chunks = split_pdf_into_chunks(file, 1000, 150)
