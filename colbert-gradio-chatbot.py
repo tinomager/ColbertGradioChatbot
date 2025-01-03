@@ -4,13 +4,25 @@ from qdrant_client import QdrantClient, models
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import fitz
 import ollama
+from dotenv import load_dotenv
+import os
+import glob
 
-qdrant_client = QdrantClient(":memory:")
-qdrant_collection_name = "colbert_collection"
-model_name = "answerdotai/answerai-colbert-small-v1"
+load_dotenv()
+
+qdrant_host = os.getenv("QDRANT_HOST")
+if qdrant_host == ":memory:":
+    qdrant_client = QdrantClient(":memory:")
+else:
+    qdrant_client = QdrantClient(host=qdrant_host)
+
+qdrant_collection_name = os.getenv("QDRANT_COLLECTION_NAME")
+model_name = os.getenv("EMBEDDINGMODEL_NAME")
 embedding_model = LateInteractionTextEmbedding(model_name)
-use_sources = True
-source_tag = "Sources -->"
+use_sources = os.getenv("USE_SOURCES").lower() == "true"
+source_tag = os.getenv("SOURCES_INDICATOR")
+chunk_size = int(os.getenv("CHUNK_SIZE"))
+chunk_overlap = int(os.getenv("CHUNK_OVERLAP"))
 
 def split_pdf_into_chunks(pdf_path, chunk_size, overlap_size):
     """
@@ -106,14 +118,15 @@ def split_text_into_chunks_langchain(pdf_path, chunk_size, overlap_size):
     return chunk_objects
 
 def prepare_documents():
-    file_names = ["docs/t-phone-pro-betriebsanleitung.pdf", "docs/elterngeld-elterngeldplus-und-elternzeit-data.pdf", "docs/ma1622_iphone_ios5_user_guide.pdf"]
+    subfolder = "docs"
+    file_names = glob.glob(os.path.join(subfolder, "**", "*.pdf"), recursive=True)
     all_chunks = []
 
     for file in file_names:
         if not use_sources:
-            chunks = split_text_into_chunks_langchain(file, 1000, 150)
+            chunks = split_text_into_chunks_langchain(file, chunk_size, chunk_overlap)
         else:  
-            chunks = split_pdf_into_chunks(file, 1000, 150)
+            chunks = split_pdf_into_chunks(file, chunk_size, chunk_overlap)
 
         print(f"Chunks read from file {file}: {len(chunks)}")
         all_chunks.extend(chunks)

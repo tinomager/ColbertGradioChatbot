@@ -1,0 +1,7 @@
+QDRANT_HOST=":memory:"
+QDRANT_COLLECTION_NAME="colbert_collection"
+EMBEDDINGMODEL_NAME="answerdotai/answerai-colbert-small-v1"
+USE_SOURCES="False"
+SOURCES_INDICATOR="Sources -->"
+CHUNK_SIZE=1000
+CHUNK_OVERLAP=150
