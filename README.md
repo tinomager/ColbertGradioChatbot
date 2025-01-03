@@ -19,8 +19,21 @@ This repository contains a Gradio-based chatbot that uses the ColBERT model for 
 pip install -r requirements.txt
 ```
 
+## Configuration
+The project supports a configuration through python-dotenv.
+For this you need to create a .env file in your root project folder with the specific configuration values for your setting.
+Configuration includes:
+- **QDRANT_HOST** can be set to ":memory" for in process or to the hostname of your Qdrant host, assuming it uses the default port
+- **QDRANT_COLLECTION_NAME** defines the name of the collection used or created within Qdrant
+- **EMBEDDINGMODEL_NAME** defines the embedding model used by the FastEmbed library
+- **USE_SOURCES** defines the algorithm used for chunking. If set to true, a custom algorithm is used that preserves the source pages for the document chunks and if set to false, Langchains text splitter is used
+- **SOURCES_INDICATOR** defines a string tag, that indicates the soures in the assistant answer. This should be set to something that would appear in your source documents
+- **CHUNK_SIZE** sets the chunk size for chunking
+- **CHUNK_OVERLAP** sets the chunk overlap for chunking
+
 ## Usage
 - **Prepare Documents:** Ensure your PDF documents are ready for processing and place them into the 'docs' folder.
+- **Create a .env file** Ensure you created an .env file accordingly to the .sample-env with your specific configuration values
 - **Run the Chatbot**: Execute the script to start the Gradio interface.
 
 ```sh
