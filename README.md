@@ -2,6 +2,10 @@
 
 This repository contains a Gradio-based chatbot that uses the ColBERT model for text embedding and Qdrant for vector storage. The chatbot can process PDF documents, split them into chunks, and use them for retrieval-augmented generation (RAG) to answer user queries.
 
+This is a sample screenshot created with the iPhone's ios5 user guide and the T Phone Pro manual in the docs folder.
+
+![Sample Screenshot](images/sample.png)
+
 ## Features
 
 - **PDF Processing**: Split PDF documents into chunks for efficient processing.
@@ -14,6 +18,7 @@ This repository contains a Gradio-based chatbot that uses the ColBERT model for 
 - Python 3.8+
 - Install dependencies using `pip`:
 - Run Ollama with Llama 3.2 3B model locally
+- Install required Python Packages with PIP
 
 ```sh
 pip install -r requirements.txt
@@ -40,52 +45,32 @@ Configuration includes:
 python colbert-gradio-chatbot.py
 ```
 
-## Functions
+## Contained Classes
 
-### split_pdf_into_chunks
-Splits a PDF document into chunks.
+### DocumentProcessor
+The `DocumentProcessor` class is responsible for processing PDF documents. It provides methods to split PDF documents into chunks for efficient processing.
 
-**Args**:
+- **Methods**:
+  - `split_pdf_into_chunks(pdf_path)`: Splits a PDF document into chunks based on the specified chunk size and overlap.
+  - `split_text_into_chunks_langchain(pdf_path)`: Splits the text of a PDF document into chunks using Langchain's text splitter.
 
-- pdf_path (str): Path to the PDF document.
-- chunk_size (int): Number of characters per chunk.
-- overlap_size (int): Number of characters that chunks should overlap.
+### VectorStore
+The `VectorStore` class handles the storage and retrieval of document embeddings using Qdrant.
 
-**Returns**:
+- **Methods**:
+  - `initialize_collection()`: Initializes a Qdrant collection if it does not already exist.
+  - `store_documents(chunks)`: Stores document chunks and their embeddings in the Qdrant collection.
 
-- list: A list of chunks with page information.
+### ChatBot
+The `ChatBot` class manages the interaction with the user, including rephrasing queries and generating responses based on the stored document embeddings.
 
-### split_text_into_chunks_langchain
-Splits text into chunks using LangChain.
+- **Methods**:
+  - `_rephrase_query(user_input, history)`: Rephrases the user's query based on the conversation history.
+  - `chat(user_input, history)`: Handles the chat interaction, retrieves relevant document chunks, and generates a response.
 
-**Args**:
+### ChatbotApp
+The `ChatbotApp` class initializes and launches the Gradio interface for the chatbot.
 
-- pdf_path (str): Path to the PDF document.
-- chunk_size (int): Number of characters per chunk.
-- overlap_size (int): Number of characters that chunks should overlap.
-
-**Returns**:
-
-- list: A list of chunks with page information.
-
-### prepare_documents
-Prepares documents for processing.
-
-### chat_with_rag
-Handles user input and generates responses using RAG.
-
-**Args**:
-
-- user_input (str): User's query.
-- history (list): Chat history.
-
-**Returns**:
-
-- str: Response to the user's query.
-
-## Open / Known Issues
-- currently the used docs are hardcoded and need to be read from the 'docs' directory, this was done for testing purposes
-- source citication generation has to be validated and test
-
-## License
-This project is licensed under the MIT License.
+- **Methods**:
+  - `prepare_documents()`: Prepares and stores document chunks in the vector store.
+  - `launch()`: Launches the Gradio chat interface.
