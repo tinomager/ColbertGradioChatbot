@@ -35,6 +35,7 @@ Configuration includes:
 - **SOURCES_INDICATOR** defines a string tag, that indicates the soures in the assistant answer. This should be set to something that would appear in your source documents
 - **CHUNK_SIZE** sets the chunk size for chunking
 - **CHUNK_OVERLAP** sets the chunk overlap for chunking
+- **LLM_MODEL** sets the name for the local Ollama model to be used as LLM
 
 ## Usage
 - **Prepare Documents:** Ensure your PDF documents are ready for processing and place them into the 'docs' folder.
