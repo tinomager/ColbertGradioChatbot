@@ -36,6 +36,8 @@ Configuration includes:
 - **CHUNK_SIZE** sets the chunk size for chunking
 - **CHUNK_OVERLAP** sets the chunk overlap for chunking
 - **LLM_MODEL** sets the name for the local Ollama model to be used as LLM
+- **LLM_URL** the URL of the LLM-hosting service with an OpenAI-compatible API
+- **LLM_API_KEY** the api key to send to the LLM-hosting service with OpenAI-compatible API
 
 ## Usage
 - **Prepare Documents:** Ensure your PDF documents are ready for processing and place them into the 'docs' folder.

@@ -6,3 +6,5 @@ SOURCES_INDICATOR="Sources -->"
 CHUNK_SIZE=1000
 CHUNK_OVERLAP=150
 LLM_MODEL="llama3.2"
+LLM_URL="http://localhost:11434/v1"
+LLM_API_KEY="is_not_used"

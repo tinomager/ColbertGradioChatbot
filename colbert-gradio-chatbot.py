@@ -3,7 +3,7 @@ from fastembed import LateInteractionTextEmbedding
 from qdrant_client import QdrantClient, models
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import fitz
-import ollama
+import openai
 from dotenv import load_dotenv
 import os
 import glob
@@ -107,12 +107,19 @@ class VectorStore:
         self.client.upsert(collection_name=self.collection_name, points=points)
 
 class ChatBot:
-    def __init__(self, vector_store, embedding_model, language_model, use_sources=False, source_tag="Sources:"):
+    def __init__(self, vector_store, embedding_model, language_model, api_url, api_key, use_sources=False, source_tag="Sources:"):
         self.vector_store = vector_store
         self.embedding_model = embedding_model
         self.use_sources = use_sources
         self.source_tag = source_tag
         self.language_model = language_model
+        self.api_url = api_url
+        self.api_key = api_key
+        client = openai.OpenAI(
+            api_key=api_key,
+            base_url=self.api_url 
+        )
+        self.openai_client = client
 
     def _rephrase_query(self, user_input, history):
         if not history:
@@ -129,7 +136,12 @@ class ChatBot:
             messages.append({"role": msg["role"], "content": msg["content"]})
 
         prompt = f"You are an expert at rephrasing text. Your task is to rewrite a given user input based on a given conversation between an assistant and an user. Here is the history of the conversation: {history_text}. The next input of the user is: {user_input}. Please carefully rewrite the last user input considering the given historical chat context. The rewritten user input should contain all necessary information from the previous history. If you are not sure how to rewrite the user input, just return the original user input. Only return the rewritten or original user input."
-        return ollama.generate(model=self.language_model, prompt=prompt).response
+        response = self.openai_client.chat.completions.create(
+            model=self.language_model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        return response.choices[0].message.content
 
     def chat(self, user_input, history):
         if user_input.lower() == "exit":
@@ -146,8 +158,12 @@ class ChatBot:
         context = "\n".join([point.payload.get("text", "") for point in results.points])
         messages = [msg for msg in history] + [{"role": "user", "content": f"You are a helpful assistant for question-answering tasks. Here is some context for the question: {context} Please carefully consider the given context. Review the user's question and then provide an answer that directly addresses the question using the provided information. If you do not find the answer in the context, say so honestly. User's question: {user_input}"}]
         
-        response = ollama.chat(model=self.language_model, messages=messages)
-        answer = response.message.content
+        response = self.openai_client.chat.completions.create(
+            model=self.language_model,
+            messages=messages,
+            temperature=0.7
+        )
+        answer = response.choices[0].message.content
 
         if self.use_sources:
             sources = "\n".join([f"{i+1}. {point.payload.get('document', '')}, S. {point.payload.get('start_page', '')}"
@@ -175,6 +191,8 @@ class ChatbotApp:
             self.vector_store,
             self.embedding_model,
             os.getenv("LLM_MODEL"),
+            os.getenv("LLM_URL"),
+            os.getenv("LLM_API_KEY"),
             use_sources=os.getenv("USE_SOURCES").lower() == "true",
             source_tag=os.getenv("SOURCES_INDICATOR")
         )
